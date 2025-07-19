@@ -204,7 +204,18 @@ class AnimatedFlipCounter extends StatelessWidget {
         counter++;
       }
     }
-
+   final fractionWidgets = <Widget>[];
+    for (int i = digits.length - fractionDigits; i < digits.length; i++) {
+      final digit = _SingleDigitFlipCounter(
+          key: ValueKey('decimal$i'),
+          value: digits[i].toDouble(),
+          duration: duration,
+          curve: curve,
+          size: prototypeDigit.size,
+          color: color,
+          padding: padding);
+      fractionWidgets.add(digit);
+    }
     return DefaultTextStyle.merge(
       style: style,
       child: Row(
@@ -228,20 +239,16 @@ class AnimatedFlipCounter extends StatelessWidget {
           ),
           if (infix != null) Text(infix!),
           // Draw digits before the decimal point
-          ...integerWidgets,
+          SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              chlid: Wrap(children:integerWidgets)),
           // Draw the decimal point
           if (fractionDigits != 0) Text(decimalSeparator),
           // Draw digits after the decimal point
-          for (int i = digits.length - fractionDigits; i < digits.length; i++)
-            _SingleDigitFlipCounter(
-              key: ValueKey('decimal$i'),
-              value: digits[i].toDouble(),
-              duration: duration,
-              curve: curve,
-              size: prototypeDigit.size,
-              color: color,
-              padding: padding,
-            ),
+         if (fractionWidgets.isNotEmpty)
+            SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Wrap(children: fractionWidgets)),
           if (suffix != null) Text(suffix!),
         ],
       ),
@@ -285,6 +292,7 @@ class _SingleDigitFlipCounter extends StatelessWidget {
           width: visible ? w : 0,
           height: h,
           child: Stack(
+            clipBehavior: Clip.none,
             children: <Widget>[
               _buildSingleDigit(
                 digit: whole % 10,
