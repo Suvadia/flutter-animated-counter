@@ -123,7 +123,7 @@ class AnimatedFlipCounter extends StatelessWidget {
     final prototypeDigit = TextPainter(
       text: TextSpan(text: '0', style: style),
       textDirection: TextDirection.ltr,
-      textScaler: MediaQuery.textScalerOf(context),
+      textScaleFactor: MediaQuery.of(context).textScaleFactor,
     )..layout();
 
     // Find the text color (or red as warning). This is so we can avoid using
@@ -174,7 +174,18 @@ class AnimatedFlipCounter extends StatelessWidget {
       );
       integerWidgets.add(digit);
     }
-
+    final fractionWidgets = <Widget>[];
+    for (int i = digits.length - fractionDigits; i < digits.length; i++) {
+      final digit = _SingleDigitFlipCounter(
+          key: ValueKey('decimal$i'),
+          value: digits[i].toDouble(),
+          duration: duration,
+          curve: curve,
+          size: prototypeDigit.size,
+          color: color,
+          padding: padding);
+      fractionWidgets.add(digit);
+    }
     // Insert "thousand separator" widgets if needed.
     if (thousandSeparator != null) {
       // Find the first digit that's NOT a HIDDEN leading zero.
@@ -228,20 +239,16 @@ class AnimatedFlipCounter extends StatelessWidget {
           ),
           if (infix != null) Text(infix!),
           // Draw digits before the decimal point
-          ...integerWidgets,
+          SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Wrap(children: integerWidgets)),
           // Draw the decimal point
           if (fractionDigits != 0) Text(decimalSeparator),
           // Draw digits after the decimal point
-          for (int i = digits.length - fractionDigits; i < digits.length; i++)
-            _SingleDigitFlipCounter(
-              key: ValueKey('decimal$i'),
-              value: digits[i].toDouble(),
-              duration: duration,
-              curve: curve,
-              size: prototypeDigit.size,
-              color: color,
-              padding: padding,
-            ),
+          if (fractionWidgets.isNotEmpty)
+            SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Wrap(children: fractionWidgets)),
           if (suffix != null) Text(suffix!),
         ],
       ),
